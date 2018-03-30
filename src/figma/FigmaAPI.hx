@@ -65,11 +65,11 @@ typedef Response<T> = {
 typedef Document = {
 
 	var schemaVersion:Int;
-    var name:String;
-    var components:Map<String, Component>;
-    var lastModified:String;
-    var document:DocumentNode;
-    var thumbnailUrl:String;
+	var name:String;
+	var components:Map<String, Component>;
+	var lastModified:String;
+	var document:DocumentNode;
+	var thumbnailUrl:String;
 
 }
 
@@ -357,130 +357,130 @@ typedef Component = {
 @:enum abstract LayoutConstraintVertical(String) {
 
 	var Top = "TOP";
-    var Bottom = "BOTTOM";
-    var Center = "CENTER";
-    var TopBottom = "TOP_BOTTOM";
-    var Scale = "SCALE";
-    
+	var Bottom = "BOTTOM";
+	var Center = "CENTER";
+	var TopBottom = "TOP_BOTTOM";
+	var Scale = "SCALE";
+	
 }
 
 @:enum abstract PaintType(String) {
 
 	var Solid = "SOLID";
-    var GradientLinear = "GRADIENT_LINEAR";
-    var GradientRadial = "GRADIENT_RADIAL";
-    var GradientAngular = "GRADIENT_ANGULAR";
-    var GradientDiamond = "GRADIENT_DIAMOND";
-    var Image = "IMAGE";
-    var Emoji = "EMOJI";
-    
+	var GradientLinear = "GRADIENT_LINEAR";
+	var GradientRadial = "GRADIENT_RADIAL";
+	var GradientAngular = "GRADIENT_ANGULAR";
+	var GradientDiamond = "GRADIENT_DIAMOND";
+	var Image = "IMAGE";
+	var Emoji = "EMOJI";
+	
 }
 
 @:enum abstract TypeStyleTextAlignVertical(String) {
 
 	var Top = "TOP";
-    var Center = "CENTER";
-    var Bottom = "BOTTOM";
-    
+	var Center = "CENTER";
+	var Bottom = "BOTTOM";
+	
 }
 
 @:enum abstract LayoutConstraintHorizontal(String) {
 
 	var Left = "LEFT";
-    var Right = "RIGHT";
-    var Center = "CENTER";
-    var LeftRight = "LEFT_RIGHT";
-    var Scale = "SCALE";
-    
+	var Right = "RIGHT";
+	var Center = "CENTER";
+	var LeftRight = "LEFT_RIGHT";
+	var Scale = "SCALE";
+	
 }
 
 @:enum abstract VectorNodeStrokeAlign(String) {
 
 	var Inside = "INSIDE";
-    var Outside = "OUTSIDE";
-    var Center = "CENTER";
-    
+	var Outside = "OUTSIDE";
+	var Center = "CENTER";
+	
 }
 
 @:enum abstract ExportSettingFormat(String) {
 
 	var Jpg = "JPG";
-    var Png = "PNG";
-    var Svg = "SVG";
-    
+	var Png = "PNG";
+	var Svg = "SVG";
+	
 }
 
 @:enum abstract BlendMode(String) {
 
 	var PassThrough = "PASS_THROUGH";
-    var Normal = "NORMAL";
-    var Darken = "DARKEN";
-    var Multiply = "MULTIPLY";
-    var LinearBurn = "LINEAR_BURN";
-    var ColorBurn = "COLOR_BURN";
-    var Lighten = "LIGHTEN";
-    var Screen = "SCREEN";
-    var LinearDodge = "LINEAR_DODGE";
-    var ColorDodge = "COLOR_DODGE";
-    var Overlay = "OVERLAY";
-    var SoftLight = "SOFT_LIGHT";
-    var HardLight = "HARD_LIGHT";
-    var Difference = "DIFFERENCE";
-    var Exclusion = "EXCLUSION";
-    var Hue = "HUE";
-    var Saturation = "SATURATION";
-    var Color = "COLOR";
-    var Luminosity = "LUMINOSITY";
-    
+	var Normal = "NORMAL";
+	var Darken = "DARKEN";
+	var Multiply = "MULTIPLY";
+	var LinearBurn = "LINEAR_BURN";
+	var ColorBurn = "COLOR_BURN";
+	var Lighten = "LIGHTEN";
+	var Screen = "SCREEN";
+	var LinearDodge = "LINEAR_DODGE";
+	var ColorDodge = "COLOR_DODGE";
+	var Overlay = "OVERLAY";
+	var SoftLight = "SOFT_LIGHT";
+	var HardLight = "HARD_LIGHT";
+	var Difference = "DIFFERENCE";
+	var Exclusion = "EXCLUSION";
+	var Hue = "HUE";
+	var Saturation = "SATURATION";
+	var Color = "COLOR";
+	var Luminosity = "LUMINOSITY";
+	
 }
 
 @:enum abstract EffectType(String) {
 
 	var InnerShadow = "INNER_SHADOW";
-    var DropShadow = "DROP_SHADOW";
-    var LayerBlur = "LAYER_BLUR";
-    var BackgroundBlur = "BACKGROUND_BLUR";
-    
+	var DropShadow = "DROP_SHADOW";
+	var LayerBlur = "LAYER_BLUR";
+	var BackgroundBlur = "BACKGROUND_BLUR";
+	
 }
 
 @:enum abstract ConstraintType(String) {
 
 	var Scale = "SCALE";
-    var Width = "WIDTH";
-    var Height = "HEIGHT";
-    
+	var Width = "WIDTH";
+	var Height = "HEIGHT";
+	
 }
 
 @:enum abstract LayoutGridAlignment(String) {
 
 	var Min = "MIN";
-    var Max = "MAX";
-    var Center = "CENTER";
-    
+	var Max = "MAX";
+	var Center = "CENTER";
+	
 }
 
 @:enum abstract TypeStyleTextAlignHorizontal(String) {
 
 	var Left = "LEFT";
-    var Right = "RIGHT";
-    var Center = "CENTER";
-    var Justified = "JUSTIFIED";
-    
+	var Right = "RIGHT";
+	var Center = "CENTER";
+	var Justified = "JUSTIFIED";
+	
 }
 
 @:enum abstract LayoutGridPattern(String) {
 
 	var Columns = "COLUMNS";
-    var Rows = "ROWS";
-    var Grid = "GRID";
-    
+	var Rows = "ROWS";
+	var Grid = "GRID";
+	
 }
 
 @:enum abstract PaintScaleMode(String) {
 
 	var Fill = "FILL";
-    var Fit = "FIT";
-    var Tile = "TILE";
-    var Stretch = "STRETCH";
-    
+	var Fit = "FIT";
+	var Tile = "TILE";
+	var Stretch = "STRETCH";
+	
 }

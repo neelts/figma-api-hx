@@ -24,7 +24,7 @@ class FigmaAPI {
 	}
 
 	public function files(key:String, ?onComplete:Response<Document> -> Void):Void call(methodName(), key, null, onComplete);
-	public function images(key:String, params:ImagesParams, ?onComplete:Response<Dynamic> -> Void):Void call(methodName(), key, null, onComplete);
+	//public function images(key:String, params:ImagesParams, ?onComplete:Response<Dynamic> -> Void):Void call(methodName(), key, null, onComplete);
 
 	private function call<P, T, R:Response<T>>(method:String, key:String, params:P = null, onComplete:R -> Void = null):Void {
 		var thread:Thread = Thread.create(callAsync);
@@ -50,10 +50,12 @@ class FigmaAPI {
 }
 
 typedef Call<P, R> = {
+
 	var method:String;
 	var key:String;
 	var params:P;
 	var onComplete:R -> Void;
+
 }
 
 typedef Response<T> = {
@@ -61,12 +63,14 @@ typedef Response<T> = {
 }
 
 typedef Document = {
+
 	var schemaVersion:Int;
-    var name:String;
-    var components:Map<String, Component>;
-    var lastModified:String;
-    var document:DocumentNode;
-    var thumbnailUrl:String;
+	var name:String;
+	var components:Map<String, Component>;
+	var lastModified:String;
+	var document:DocumentNode;
+	var thumbnailUrl:String;
+
 }
 
 /**
@@ -76,10 +80,12 @@ typedef Document = {
 **/
 
 typedef Node = {
+
 	var id:String;
 	var name:String;
 	var visible:Bool;
 	var type:NodeType;
+
 }
 
 @:enum abstract NodeType(String) {
@@ -115,5 +121,5 @@ typedef ::name:: = {
 @:enum abstract ::name::(String) {
 
 	::foreach vars::var ::name:: = ::value::;
-    ::end::
+	::end::
 }::end::
