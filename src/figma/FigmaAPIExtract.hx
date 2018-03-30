@@ -1,8 +1,8 @@
 package figma;
-import haxe.Template;
-import Array;
+
 import haxe.Http;
 import haxe.Json;
+import haxe.Template;
 import sys.io.File;
 
 using StringTools;
@@ -21,13 +21,16 @@ class FigmaAPIExtract {
 	private static var cln:EReg = ~/:+/g;
 	private static var def:EReg = ~/"default"/g;
 	private static var props:EReg = ~/([a-zA-Z0-9]*):/g;
-	private static var ext:EReg = ~/"span",\{className=l\.literal\},"([A-Z_]+)"/g;
+	private static var extend:EReg = ~/"span",\{className=l\.literal\},"([A-Z_]+)"/g;
+	private static var enums:EReg = ~/"span",\{className=l\.string\},'"([A-Z_]+)"'/g;
+	private static var isEnum:EReg = ~/enum/gi;
 
 	private static var map:EReg = ~/Map<(.+),(.+)>/;
 	private static var array:EReg = ~/(.+)\[\]/;
 
 	private static var parts:Parts;
 	private static var api:API;
+	private static var apiEnums:Map<String, TypeDef>;
 
 	public static function main():Void {
 		trace("started");
@@ -49,46 +52,73 @@ class FigmaAPIExtract {
 
 	private static function generate():Void {
 
-		api = { nodes:[], types:[] };
+		api = { nodes:[], types:[], enums:[] };
+		apiEnums = new Map<String, TypeDef>();
 
 		for (node in parts.nodeProps) {
-			var type:NodeTypeDef = { name:node.name.getNodeName(), type:node.name, id:node.name.getNodeName(false), vars:[] };
+			var type:NodeTypeDef = { name:node.name.getName(), type:node.name, id:node.name.getName(false), vars:[] };
 			for (prop in node.props) {
 				if (type.extend == null && prop.div != null && prop.name == null) type.extend = prop.div.getExtends();
-				if (prop.name != null) type.vars.push({ name:prop.name, type:prop.type.getType() });
+				if (prop.name != null) type.vars.push({
+					name:prop.name, type:prop.type.getType(prop.div, type.name + prop.name.capital())
+				});
 			}
 			if (type.extend == null) type.extend = "Node";
 			api.nodes.push(type);
 		}
 
 		for (part in parts.fileFormatTypes) {
-			var type:TypeDef = { name:part.name, vars:[] };
-			for (prop in part.props) if (prop.name != null) type.vars.push({ name:prop.name, type:prop.type.getType() });
-			api.types.push(type);
+			if (isEnum.match(part.desc)) {
+				for (prop in part.props) addEnumType(prop.div, part.name);
+			} else {
+				var type:TypeDef = { name:part.name, vars:[] };
+				for (prop in part.props) if (prop.name != null) type.vars.push({
+					name:prop.name, type:prop.type.getType(prop.div, type.name + prop.name.capital())
+				});
+				api.types.push(type);
+			}
 		}
+
+		for (e in apiEnums) api.enums.push(e);
 
 		File.saveContent('$src/FigmaAPI.hx', new Template(File.getContent('$src/FigmaAPI.hxt')).execute(api));
 	}
 
-	private static function getType(type:String):String {
+	private static function getType(type:String, div:String = null, name:String = null):String {
 		return switch (type) {
 			case 'Boolean': 'Bool';
 			case 'Number': 'Float';
 			case type if (map.match(type)): 'Map<${getType(map.first())}, ${getType(map.second())}>';
 			case type if (array.match(type)): 'Array<${getType(array.first())}>';
-			default: type;
+			default: {
+				if (div != null && name != null && enums.match(div)) {
+					addEnumType(div, name);
+					name;
+				} else type;
+			}
 		}
 	}
 
-	private static function getNodeName(name:String, node:Bool = true):String {
+	private static function addEnumType(s:String, name:String):Void {
+		var e:TypeDef = apiEnums.get(name);
+		if (e == null) e = { name:name, vars:[], isEnum:true };
+		while (enums.match(s)) {
+			var value:String = enums.first();
+			e.vars.push({ name:value.getName(false), value:'"$value"' });
+			s = enums.matchedRight();
+		}
+		if (!apiEnums.exists(name)) apiEnums.set(name, e);
+	}
+
+	private static function getName(name:String, node:Bool = true):String {
 		var r:String = "";
-		for (p in name.split("_")) r += p.charAt(0) + p.substring(1).toLowerCase();
+		for (p in name.split("_")) r += p.lower();
 		if (node) r += "Node";
 		return r;
 	}
 
 	private static function getExtends(div:String):String {
-		return ext.match(div) ? ext.matched(1).getNodeName() : null;
+		return extend.match(div) ? extend.first().getName() : null;
 	}
 
 	private static function get(data:String, from:Int):Dynamic {
@@ -148,6 +178,14 @@ class FigmaAPIExtract {
 	public static inline function second(e:EReg):String {
 		return e.matched(2);
 	}
+
+	public static function lower(s:String, l:Bool = true):String {
+		return s.charAt(0) + s.substring(1).toLowerCase();
+	}
+
+	public static function capital(s:String, l:Bool = true):String {
+		return s.charAt(0).toUpperCase() + s.substring(1);
+	}
 }
 
 private typedef Parts = {
@@ -174,17 +212,20 @@ private typedef Prop = {
 private typedef API = {
 	var nodes:Array<NodeTypeDef>;
 	var types:Array<TypeDef>;
+	var enums:Array<TypeDef>;
 }
 
 private typedef TypeDef = {
 	var name:String;
 	var vars:Array<TypeDefVar>;
+	@:optional var isEnum:Bool;
 }
 
 private typedef TypeDefVar = {
 	var name:String;
 	@:optional var optional:Bool;
-	var type:String;
+	@:optional var type:String;
+	@:optional var value:String;
 }
 
 private typedef NodeTypeDef = { > TypeDef,

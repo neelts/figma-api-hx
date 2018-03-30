@@ -24,7 +24,7 @@ class FigmaAPI {
 	}
 
 	public function files(key:String, ?onComplete:Response<Document> -> Void):Void call(methodName(), key, null, onComplete);
-	public function images(key:String, params:ImagesParams, ?onComplete:Response<Dynamic> -> Void):Void call(methodName(), key, null, onComplete);
+	//public function images(key:String, params:ImagesParams, ?onComplete:Response<Dynamic> -> Void):Void call(methodName(), key, null, onComplete);
 
 	private function call<P, T, R:Response<T>>(method:String, key:String, params:P = null, onComplete:R -> Void = null):Void {
 		var thread:Thread = Thread.create(callAsync);
@@ -50,40 +50,27 @@ class FigmaAPI {
 }
 
 typedef Call<P, R> = {
+
 	var method:String;
 	var key:String;
 	var params:P;
 	var onComplete:R -> Void;
+
 }
 
 typedef Response<T> = {
 
 }
 
-typedef ImagesParams = {
-	var ids:String;
-	var scale:Float;
-	var format:Format;
-}
-
-@:enum abstract Format(String) {
-	var JPG = "jpg";
-	var PNG = "png";
-	var SVG = "svg";
-}
-
 typedef Document = {
+
 	var schemaVersion:Int;
     var name:String;
     var components:Map<String, Component>;
     var lastModified:String;
     var document:DocumentNode;
     var thumbnailUrl:String;
-}
 
-typedef Component = {
-	var name:String;
-	var description:String;
 }
 
 /**
@@ -93,10 +80,12 @@ typedef Component = {
 **/
 
 typedef Node = {
+
 	var id:String;
 	var name:String;
 	var visible:Bool;
 	var type:NodeType;
+
 }
 
 @:enum abstract NodeType(String) {
@@ -170,7 +159,7 @@ typedef VectorNode = { > Node,
 	var fills:Array<Paint>;
 	var strokes:Array<Paint>;
 	var strokeWeight:Float;
-	var strokeAlign:String;
+	var strokeAlign:VectorNodeStrokeAlign;
 	
 }
 
@@ -251,14 +240,14 @@ typedef Color = {
 typedef ExportSetting = {
 
 	var suffix:String;
-	var format:String;
+	var format:ExportSettingFormat;
 	var constraint:Constraint;
 	
 }
 
 typedef Constraint = {
 
-	var type:String;
+	var type:ConstraintType;
 	var value:Float;
 	
 }
@@ -272,25 +261,20 @@ typedef Rectangle = {
 	
 }
 
-typedef BlendMode = {
-
-	
-}
-
 typedef LayoutConstraint = {
 
-	var vertical:String;
-	var horizontal:String;
+	var vertical:LayoutConstraintVertical;
+	var horizontal:LayoutConstraintHorizontal;
 	
 }
 
 typedef LayoutGrid = {
 
-	var pattern:String;
+	var pattern:LayoutGridPattern;
 	var sectionSize:Float;
 	var visible:Bool;
 	var color:Color;
-	var alignment:String;
+	var alignment:LayoutGridAlignment;
 	var gutterSize:Float;
 	var offset:Float;
 	var count:Float;
@@ -299,7 +283,7 @@ typedef LayoutGrid = {
 
 typedef Effect = {
 
-	var type:String;
+	var type:EffectType;
 	var visible:Bool;
 	var radius:Float;
 	var color:Color;
@@ -310,13 +294,13 @@ typedef Effect = {
 
 typedef Paint = {
 
-	var type:String;
+	var type:PaintType;
 	var visible:Bool;
 	var opacity:Float;
 	var color:Color;
 	var gradientHandlePositions:Array<Vector>;
 	var gradientStops:Array<ColorStop>;
-	var scaleMode:String;
+	var scaleMode:PaintScaleMode;
 	
 }
 
@@ -348,8 +332,8 @@ typedef TypeStyle = {
 	var italic:Bool;
 	var fontWeight:Float;
 	var fontSize:Float;
-	var textAlignHorizontal:String;
-	var textAlignVertical:String;
+	var textAlignHorizontal:TypeStyleTextAlignHorizontal;
+	var textAlignVertical:TypeStyleTextAlignVertical;
 	var letterSpacing:Float;
 	var fills:Array<Paint>;
 	var lineHeightPx:Float;
@@ -362,4 +346,141 @@ typedef Component = {
 	var name:String;
 	var description:String;
 	
+}
+
+/**
+*
+*	Enums
+*
+**/
+
+@:enum abstract LayoutConstraintVertical(String) {
+
+	var Top = "TOP";
+    var Bottom = "BOTTOM";
+    var Center = "CENTER";
+    var TopBottom = "TOP_BOTTOM";
+    var Scale = "SCALE";
+    
+}
+
+@:enum abstract PaintType(String) {
+
+	var Solid = "SOLID";
+    var GradientLinear = "GRADIENT_LINEAR";
+    var GradientRadial = "GRADIENT_RADIAL";
+    var GradientAngular = "GRADIENT_ANGULAR";
+    var GradientDiamond = "GRADIENT_DIAMOND";
+    var Image = "IMAGE";
+    var Emoji = "EMOJI";
+    
+}
+
+@:enum abstract TypeStyleTextAlignVertical(String) {
+
+	var Top = "TOP";
+    var Center = "CENTER";
+    var Bottom = "BOTTOM";
+    
+}
+
+@:enum abstract LayoutConstraintHorizontal(String) {
+
+	var Left = "LEFT";
+    var Right = "RIGHT";
+    var Center = "CENTER";
+    var LeftRight = "LEFT_RIGHT";
+    var Scale = "SCALE";
+    
+}
+
+@:enum abstract VectorNodeStrokeAlign(String) {
+
+	var Inside = "INSIDE";
+    var Outside = "OUTSIDE";
+    var Center = "CENTER";
+    
+}
+
+@:enum abstract ExportSettingFormat(String) {
+
+	var Jpg = "JPG";
+    var Png = "PNG";
+    var Svg = "SVG";
+    
+}
+
+@:enum abstract BlendMode(String) {
+
+	var PassThrough = "PASS_THROUGH";
+    var Normal = "NORMAL";
+    var Darken = "DARKEN";
+    var Multiply = "MULTIPLY";
+    var LinearBurn = "LINEAR_BURN";
+    var ColorBurn = "COLOR_BURN";
+    var Lighten = "LIGHTEN";
+    var Screen = "SCREEN";
+    var LinearDodge = "LINEAR_DODGE";
+    var ColorDodge = "COLOR_DODGE";
+    var Overlay = "OVERLAY";
+    var SoftLight = "SOFT_LIGHT";
+    var HardLight = "HARD_LIGHT";
+    var Difference = "DIFFERENCE";
+    var Exclusion = "EXCLUSION";
+    var Hue = "HUE";
+    var Saturation = "SATURATION";
+    var Color = "COLOR";
+    var Luminosity = "LUMINOSITY";
+    
+}
+
+@:enum abstract EffectType(String) {
+
+	var InnerShadow = "INNER_SHADOW";
+    var DropShadow = "DROP_SHADOW";
+    var LayerBlur = "LAYER_BLUR";
+    var BackgroundBlur = "BACKGROUND_BLUR";
+    
+}
+
+@:enum abstract ConstraintType(String) {
+
+	var Scale = "SCALE";
+    var Width = "WIDTH";
+    var Height = "HEIGHT";
+    
+}
+
+@:enum abstract LayoutGridAlignment(String) {
+
+	var Min = "MIN";
+    var Max = "MAX";
+    var Center = "CENTER";
+    
+}
+
+@:enum abstract TypeStyleTextAlignHorizontal(String) {
+
+	var Left = "LEFT";
+    var Right = "RIGHT";
+    var Center = "CENTER";
+    var Justified = "JUSTIFIED";
+    
+}
+
+@:enum abstract LayoutGridPattern(String) {
+
+	var Columns = "COLUMNS";
+    var Rows = "ROWS";
+    var Grid = "GRID";
+    
+}
+
+@:enum abstract PaintScaleMode(String) {
+
+	var Fill = "FILL";
+    var Fit = "FIT";
+    var Tile = "TILE";
+    var Stretch = "STRETCH";
+    
 }

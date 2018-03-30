@@ -60,18 +60,6 @@ typedef Response<T> = {
 
 }
 
-typedef ImagesParams = {
-	var ids:String;
-	var scale:Float;
-	var format:Format;
-}
-
-@:enum abstract Format(String) {
-	var JPG = "jpg";
-	var PNG = "png";
-	var SVG = "svg";
-}
-
 typedef Document = {
 	var schemaVersion:Int;
     var name:String;
@@ -79,11 +67,6 @@ typedef Document = {
     var lastModified:String;
     var document:DocumentNode;
     var thumbnailUrl:String;
-}
-
-typedef Component = {
-	var name:String;
-	var description:String;
 }
 
 /**
@@ -121,4 +104,16 @@ typedef ::name:: = {
 
 	::foreach vars::::if optional::@:optional ::end::var ::name:::::type::;
 	::end::
+}::end::
+
+/**
+*
+*	Enums
+*
+**/::foreach enums::
+
+@:enum abstract ::name::(String) {
+
+	::foreach vars::var ::name:: = ::value::;
+    ::end::
 }::end::
