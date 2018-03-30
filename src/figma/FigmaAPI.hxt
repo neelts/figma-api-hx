@@ -1,0 +1,125 @@
+package figma;
+
+import haxe.Http;
+import haxe.Json;
+import haxe.macro.Context;
+import haxe.macro.Expr.ExprOf;
+import haxe.macro.Expr;
+import neko.vm.Thread;
+import Reflect;
+import String;
+
+class FigmaAPI {
+
+	private static inline var API:String = "https://api.figma.com/v1";
+
+	private static inline var MIME_JSON:String = "application/json";
+	private static inline var HEADER_CONTENT_TYPE:String = "Content-Type";
+	private static inline var HEADER_TOKEN:String = "X-Figma-Token";
+
+	private var token:String;
+
+	public function new(token:String):Void {
+		this.token = token;
+	}
+
+	public function files(key:String, ?onComplete:Response<Document> -> Void):Void call(methodName(), key, null, onComplete);
+    public function file(key:String, ?onComplete:Response<Document> -> Void):Void call(methodName(), key, null, onComplete);
+    public function images(key:String, params:ImagesParams, ?onComplete:Response<Dynamic> -> Void):Void call(methodName(), key, null, onComplete);
+
+	private function call<P, T, R:Response<T>>(method:String, key:String, params:P = null, onComplete:R -> Void = null):Void {
+		var thread:Thread = Thread.create(callAsync);
+		var message:Call<P, R> = { method:method, key:key, params:params, onComplete:onComplete };
+		thread.sendMessage(message);
+	}
+
+	private function callAsync<P, T, R:Response<T>>():Void {
+		var message:Call<P, Response<T>> = Thread.readMessage(true);
+		var http:Http = new Http('${API}/${message.method}/${message.key}');
+		if (message.params != null) for (param in Reflect.fields(message.params)) http.addParameter(param, Reflect.field(message.params, param));
+		http.addHeader(HEADER_CONTENT_TYPE, MIME_JSON);
+		http.addHeader(HEADER_TOKEN, token);
+		if (message.onComplete != null) http.onData = http.onError = function(_):Void message.onComplete(Json.parse(http.responseData));
+		http.request();
+	}
+
+	#if idea var $v:Expr; #end
+
+	macro public static function methodName():ExprOf<String> {
+		return macro $v{Context.getLocalMethod()};
+	}
+}
+
+typedef Call<P, R> = {
+	var method:String;
+	var key:String;
+	var params:P;
+	var onComplete:R -> Void;
+}
+
+typedef Response<T> = {
+
+}
+
+typedef ImagesParams = {
+	var ids:String;
+	var scale:Float;
+	var format:Format;
+}
+
+@:enum abstract Format(String) {
+	var JPG = "jpg";
+	var PNG = "png";
+	var SVG = "svg";
+}
+
+typedef Document = {
+	var schemaVersion:Int;
+    var name:String;
+    var components:Map<String, Component>;
+    var lastModified:String;
+    var document:DocumentNode;
+    var thumbnailUrl:String;
+}
+
+typedef Component = {
+	var name:String;
+	var description:String;
+}
+
+/**
+*
+*	Nodes
+*
+**/
+
+typedef Node = {
+	var id:String;
+	var name:String;
+	var visible:Bool;
+	var type:NodeType;
+}
+
+@:enum abstract NodeType(String) {
+
+	::foreach nodes::var ::id:: = "::type::";
+	::end::
+}::foreach nodes::
+
+typedef ::name:: = { > ::extend::,
+
+	::foreach vars::::if optional::@:optional ::end::var ::name:::::type::;
+	::end::
+}::end::
+
+/**
+*
+*	Types
+*
+**/::foreach types::
+
+typedef ::name:: = {
+
+	::foreach vars::::if optional::@:optional ::end::var ::name:::::type::;
+	::end::
+}::end::
