@@ -13,16 +13,14 @@ class Figma {
 			trace(r.data.name);
 			trace(r.data.lastModified);
 			var document:DocumentNode = r.data.document;
-			for (node in document.children) {
-
-			}
+			for (node in document.children) trace(node.type);
 		});
 
 		MainLoop.addThread(keep);
 	}
 
-	@:extern private static inline function load(file:String):String return File.getContent(file);
-	@:extern private static inline function save(file:String, content:String):String return File.saveContent(file, content);
+	private static inline function load(file:String):String return File.getContent(file);
+	private static inline function save(file:String, content:String):Void File.saveContent(file, content);
 
 	private static function keep():Void while (true) Sys.sleep(1);
 }
