@@ -10,10 +10,16 @@ class Figma {
 	public static function main():Void {
 		var figmaAPI:FigmaAPI = new FigmaAPI("token".load());
 		figmaAPI.files("file".load(), function(r:Response<Document>) {
-			trace(r.data.name);
-			trace(r.data.lastModified);
-			var document:DocumentNode = r.data.document;
-			for (node in document.children) trace(node.type);
+			if (r.data != null) {
+				trace(r.data.name);
+				trace(r.data.lastModified);
+				var document:DocumentNode = r.data.document;
+				for (node in document.children) trace(node.type);
+			} else {
+				trace(r.error);
+				trace(r.error.err);
+				trace(r.error.status);
+			}
 		});
 
 		MainLoop.addThread(keep);

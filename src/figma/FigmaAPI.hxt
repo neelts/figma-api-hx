@@ -1,5 +1,6 @@
 package figma;
 
+import haxe.extern.EitherType;
 import haxe.Http;
 import haxe.Json;
 import haxe.macro.Context;
@@ -38,7 +39,10 @@ class FigmaAPI {
 		if (message.params != null) for (param in Reflect.fields(message.params)) http.addParameter(param, Reflect.field(message.params, param));
 		http.addHeader(HEADER_CONTENT_TYPE, MIME_JSON);
 		http.addHeader(HEADER_TOKEN, token);
-		if (message.onComplete != null) http.onData = http.onError = function(_):Void message.onComplete({ data:Json.parse(http.responseData) });
+		if (message.onComplete != null) http.onData = http.onError = function(_):Void {
+			var response:EitherType<T, ResponseError> = Json.parse(http.responseData);
+            message.onComplete(Reflect.hasField(response, 'err') ? { error:response } : { data:response });
+		}
 		http.request();
 	}
 
@@ -58,9 +62,17 @@ typedef Call<P, R> = {
 
 }
 
+typedef ResponseError = {
+
+	var err:String;
+	var status:Int;
+
+}
+
 typedef Response<T> = {
 
-	var data:T;
+	@:optional var data:T;
+	@:optional var error:ResponseError;
 
 }
 
