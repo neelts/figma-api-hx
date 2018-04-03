@@ -60,6 +60,8 @@ typedef Call<P, R> = {
 
 typedef Response<T> = {
 
+	var data:T;
+
 }
 
 typedef Document = {
