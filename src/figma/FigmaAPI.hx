@@ -29,7 +29,7 @@ class FigmaAPI {
 	}
 
 	public function files(key:String, ?onComplete:Response<Document> -> Void):Void call(methodName(), key, null, onComplete);
-	//public function images(key:String, params:ImagesParams, ?onComplete:Response<Dynamic> -> Void):Void call(methodName(), key, null, onComplete);
+	public function images(key:String, params:ImagesParams, ?onComplete:Response<ImagesResponse> -> Void):Void call(methodName(), key, params, onComplete);
 
 	private function call<P, T, R:Response<T>>(method:String, key:String, params:P = null, onComplete:R -> Void = null):Void {
 		var thread:Thread = Thread.create(callAsync);
@@ -40,12 +40,14 @@ class FigmaAPI {
 	private function callAsync<P, T, R:Response<T>>():Void {
 		var message:Call<P, Response<T>> = Thread.readMessage(true);
 		var http:Http = new Http('${API}/${message.method}/${message.key}');
-		if (message.params != null) for (param in Reflect.fields(message.params)) http.addParameter(param, Reflect.field(message.params, param));
+		if (message.params != null) for (param in Reflect.fields(message.params)) http.addParameter(
+			param, Std.string(Reflect.field(message.params, param))
+		);
 		http.addHeader(HEADER_CONTENT_TYPE, MIME_JSON);
 		http.addHeader(HEADER_TOKEN, token);
 		if (message.onComplete != null) http.onData = http.onError = function(_):Void {
 			var response:EitherType<T, ResponseError> = Json.parse(http.responseData);
-			message.onComplete(Reflect.hasField(response, 'err') ? { error:response } : { data:response });
+			message.onComplete(Reflect.field(response, 'err') != null ? { error:response } : { data:response });
 		}
 		http.request();
 	}
@@ -80,11 +82,34 @@ typedef Response<T> = {
 
 }
 
+typedef ImagesParams = {
+
+	var ids:String;
+	var scale:Float;
+	var format:ImageFormat;
+	@:optional var version:String;
+
+}
+
+@:enum abstract ImageFormat(String) {
+
+	var JPG = "jpg";
+	var PNG = "png";
+	var SVG = "svg";
+
+}
+
+typedef ImagesResponse = { > ResponseError,
+
+	var images:EitherType<Map<String, String>, Dynamic>;
+
+}
+
 typedef Document = {
 
 	var schemaVersion:Int;
 	var name:String;
-	var components:Map<String, Component>;
+	var components:EitherType<Map<String, Component>, Dynamic>;
 	var lastModified:String;
 	var document:DocumentNode;
 	var thumbnailUrl:String;

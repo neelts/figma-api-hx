@@ -11,9 +11,11 @@ class Figma {
 
 	public static function main():Void {
 		var figmaAPI:FigmaAPI = new FigmaAPI("token".load());
-		figmaAPI.files("file".load(), function(r:Response<Document>) {
+		var fileKey:String = "file".load();
+		figmaAPI.files(fileKey, function(r:Response<Document>) {
 			'xfl/${r.data.name}.json'.save(Json.stringify(r.data));
-			FigmaXFLGenerate.generate(r.data, "xfl");
+			FigmaXFLGenerate.generate(figmaAPI, fileKey, r.data, "xfl");
+			//Sys.exit(0);
 		});
 
 		MainLoop.addThread(keep);

@@ -96,7 +96,6 @@ class FigmaAPIExtract {
 		if (endpoints.match(data)) {
 			var index:Int = endpoints.index();
 			var sub:Int = index.getLast(data);
-			
 		}
 	}
 

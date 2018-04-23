@@ -1,5 +1,11 @@
 package ;
-import figma.FigmaAPI.NodeType;
+import format.svg.Matrix;
+import format.svg.SVGGroup;
+import format.svg.SVGData;
+import format.svg.SVGData;
+import haxe.Http;
+import neko.vm.Thread;
+import figma.FigmaAPI;
 import figma.FigmaAPI;
 import haxe.Template;
 
@@ -12,13 +18,23 @@ using StringTools;
 
 class FigmaXFLGenerate {
 
+	public static function generate(figmaAPI:FigmaAPI, fileKey:String, content:Document, xflRoot:String):Void {
+		new FigmaXFLGenerate().execute(figmaAPI, fileKey, content, xflRoot);
+	}
+	
 	private static inline var MAIN:String = "Main";
 
 	public function new():Void {}
 
+	private var figmaAPI:FigmaAPI;
+	private var fileKey:String;
+	private var content:Document;
+
 	private var xflRoot:String;
 	private var xflPath:String;
 	private var libraryPath:String;
+	
+	private var images:NMap<SVGData>;
 
 	public var filename:String;
 
@@ -31,20 +47,80 @@ class FigmaXFLGenerate {
 
 	private var symbolsMap:Map<String, Symbol>;
 
-	public function execute(content:Document, xflRoot:String) {
+	public function execute(figmaAPI:FigmaAPI, fileKey:String, content:Document, xflRoot:String) {
 
+		this.figmaAPI = figmaAPI;
+		this.fileKey = fileKey;
+		this.content = content;
 		this.xflRoot = xflRoot;
 
-		filename = content.name;
+		initExport();
+		
+		getImagesList();
+	}
 
+	private function initExport():Void {
+		filename = content.name;
 		xflPath = '$xflRoot/$filename';
 		libraryPath = '$xflPath/LIBRARY';
-
-		var xfl:String = '$xflPath/$filename.xfl';
-		if (!xfl.exists()) xfl.save('$xflRoot/template/Name.xfl'.load());
-
 		if (!xflPath.exists()) xflPath.createDirectory();
 		if (!libraryPath.exists()) libraryPath.createDirectory();
+	}
+
+	private function getImagesList():Void {
+		var images:Array<String> = [];
+		getImages(content.document, images);
+		if (images.length > 0) {
+			// only vector for now
+			trace('Images to load: ${images.length}');
+			figmaAPI.images(fileKey, { ids:images.join(","), scale:1, format:ImageFormat.SVG }, loadImages);
+		} else {
+			beginParsing();
+		}
+	}
+
+	private function loadImages(response:Response<ImagesResponse>):Void {
+		if (response.data != null) {
+			var ids:NMap<String> = response.data.images.toMap();
+			images = new NMap<SVGData>();
+			for (id in ids.keys()) {
+				var load:Thread = Thread.create(loadImage);
+				var imageLoad:ImageLoad = { 
+					loaded:images, total:ids.length, id:id, url:ids.get(id), complete:imagesLoaded
+				};
+				load.sendMessage(imageLoad);
+			}
+		} else {
+			trace(response.error);
+			Sys.exit(1);
+		}
+	}
+	
+	private function imagesLoaded(loaded:NMap<SVGData>):Void {
+		trace('All loaded: ' + loaded.length);
+		beginParsing();
+	}
+
+	private function loadImage():Void {
+		var imageLoad:ImageLoad = Thread.readMessage(true);
+		var http:Http = new Http(imageLoad.url);
+		http.onData = function (_) {
+			'$libraryPath/${imageLoad.id.replace(":", "_")}.svg'.save(http.responseData);
+			imageLoad.loaded.set(imageLoad.id, new SVGData(http.responseData.parse()));
+			trace('Image: ${imageLoad.id} loaded. Left: ${imageLoad.total - imageLoad.loaded.length}');
+			if (imageLoad.loaded.length == imageLoad.total) imageLoad.complete(imageLoad.loaded);
+		}
+		http.onError = function (m:String) {
+			trace('Error! $m');
+			Sys.exit(1);
+		}
+		http.request(false);
+	}
+
+	private function beginParsing():Void {
+		
+		var xfl:String = '$xflPath/$filename.xfl';
+		if (!xfl.exists()) xfl.save('$xflRoot/template/Name.xfl'.load());
 
 		parse(content);
 
@@ -53,6 +129,15 @@ class FigmaXFLGenerate {
 		'$xflPath/DOMDocument.xml'.save(
 			new Template('$xflRoot/template/DOMDocument.xmlt'.load()).execute(this, this).pretty()
 		);
+	}
+
+	private function getImages(node:Node, images:Array<String>):Void {
+		switch (node.type) {
+			case NodeType.Document, NodeType.Canvas, NodeType.Frame, NodeType.Group, NodeType.Component, NodeType.Instance:
+				var childsNode:DocumentNode = cast node;
+				for (child in childsNode.children) getImages(child, images);
+			default: images.push(node.id);
+		}
 	}
 
 	private function parse(content:Document):Void {
@@ -94,12 +179,7 @@ class FigmaXFLGenerate {
 				var symbolElement:SymbolElement = { type:ElementType.SymbolInstance, libraryItemName:node.name };
 				symbolElement;
 			}
-			case NodeType.Rectangle: {
-				var rect:RectangleNode = cast node;
-				var rectangle:RectangleElement = { type:ElementType.Rectangle, width:rect.absoluteBoundingBox.width, height:rect.absoluteBoundingBox.height };
-				if (rect.fills.isNotEmpty()) rectangle.fill = rect.fills[0].color.hexColor();
-				rectangle;
-			}
+			case NodeType.Rectangle: getRectangle(cast node);
 			default: null;
 		}
 		if (element != null) {
@@ -114,6 +194,17 @@ class FigmaXFLGenerate {
 			}
 			frame.elements.push(element);
 		}
+	}
+
+	private function getRectangle(rect:RectangleNode):RectangleElement {
+		var r:SVGData = extract(images.get(rect.id), SVGNode.Rect);
+		trace(images.get(rect.id));
+		var rectangle:RectangleElement = {
+			type:ElementType.Rectangle, width:rect.absoluteBoundingBox.width, height:rect.absoluteBoundingBox.height,
+			matrix:r.matrix
+		};
+		if (rect.fills.isNotEmpty()) rectangle.fill = rect.fills[0].color.hexColor();
+		return rectangle;
 	}
 
 	private function getFills(fills:Array<Paint>):Array<ShapeFill> {
@@ -158,8 +249,8 @@ class FigmaXFLGenerate {
 		backgroundColor = frame.backgroundColor.hexColor();
 	}
 
-	public static function generate(content:Document, xflRoot:String):Void {
-		new FigmaXFLGenerate().execute(content, xflRoot);
+	private static function extract(svg:SVGData, node:SVGNode):SVGGroup {
+		return svg.findGroup(cast node);
 	}
 
 	private static function guid():String {
@@ -193,7 +284,50 @@ class FigmaXFLGenerate {
 		return Std.int(float * base).hex();
 	}
 
+	public static inline function toMap<V>(object:Dynamic):NMap<V> {
+		var map:NMap<V> = new NMap<V>();
+		for (key in Reflect.fields(object)) map.set(key, Reflect.field(object, key));
+		return map;
+	}
+
 	public static inline function isNotEmpty<T>(array:Array<T>):Bool return array != null && array.length > 0;
+}
+
+class NMap<V> {
+	
+	private var map:Map<String, V>;
+	public var length:Int;
+
+	public function new():Void {
+		map = new Map<String, V>();
+		length = 0;
+	}
+
+	public function set(key:String, value:V):Void {
+		map.set(key, value);
+		length++;
+	}
+
+	public function get(key:String):V {
+		return map.get(key);
+	}
+
+	public function keys():Iterator<String> {
+		return map.keys();
+	}
+	
+}
+
+@:enum abstract SVGNode(String) {
+	var Rect = 'rect';
+}
+
+typedef ImageLoad = {
+	var loaded:NMap<SVGData>;
+	var id:String;
+	var url:String;
+	var total:Int;
+	var complete:NMap<SVGData> -> Void;
 }
 
 typedef LibrarySymbol = {
@@ -232,7 +366,7 @@ typedef Frame = {
 
 typedef Element = {
 	var type:ElementType;
-	@:optional var matrix:{ tx:Float, ty:Float };
+	@:optional var matrix:Matrix;
 }
 
 typedef SymbolElement = { > Element,
