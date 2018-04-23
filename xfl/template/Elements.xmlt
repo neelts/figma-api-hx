@@ -1,0 +1,34 @@
+<elements>
+    ::foreach elements::
+    ::if (type == "SymbolInstance")::
+    <DOMSymbolInstance libraryItemName="::libraryItemName::">
+        ::if (matrix!=null)::
+        <matrix>
+            <Matrix ::if (a!=null)::a="::matrix.a::"::end:: ::if (b!=null)::b="::matrix.b::"::end:: ::if (c!=null)::c="::matrix.c::"::end:: ::if (d!=null)::d="::matrix.d::"::end:: tx="::matrix.tx::" ty="::matrix.ty::"/>
+        </matrix>
+        ::end::
+    </DOMSymbolInstance>
+    ::elseif (type=="Shape")::
+    <DOMShape>
+        <fills>
+            ::foreach fills::
+            <FillStyle index="::index::">
+                <SolidColor color="::color::"/>
+            </FillStyle>
+            ::end::
+        </fills>
+        <edges>
+            ::foreach edges::
+            <Edge fillStyle1="::fillStyle::" edges="::edges::"/>
+            ::end::
+        </edges>
+    </DOMShape>
+    ::elseif (type=="Rectangle")::
+    <DOMRectangleObject objectWidth="::width::" objectHeight="::height::" lockFlag="true">
+        <fill>
+            <SolidColor color="::fill::"/>
+        </fill>
+    </DOMRectangleObject>
+    ::end::
+    ::end::
+</elements>

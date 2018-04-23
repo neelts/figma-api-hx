@@ -7,26 +7,7 @@
                     <frames>
                         ::foreach frames::
                         <DOMFrame index="::index::" keyMode="9728">
-                            <elements>
-                                ::foreach elements::
-                                ::if (type=="Shape")::
-                                <DOMShape>
-                                    <fills>
-                                        ::foreach fills::
-                                        <FillStyle index="1">
-                                            <SolidColor color="#009900"/>
-                                        </FillStyle>
-                                        ::end::
-                                    </fills>
-                                    <edges>
-                                        ::foreach edges::
-                                        <Edge fillStyle1="::fillStyle::" edges="::edges::"/>
-                                        ::end::
-                                    </edges>
-                                </DOMShape>
-                                ::end::
-                                ::end::
-                            </elements>
+                            $$setElements(::elements::)
                         </DOMFrame>
                         ::end::
                     </frames>
