@@ -25,6 +25,8 @@ class FigmaAPIExtract {
 	private static var enums:EReg = ~/"span",\{className=l\.string\},'"([A-Z_]+)"'/g;
 	private static var isEnum:EReg = ~/enum/gi;
 
+	private static var endpoints:EReg = ~/createElement\("div",\{id:"endpoints"\}/;
+
 	private static var map:EReg = ~/Map<(.+),(.+)>/;
 	private static var array:EReg = ~/(.+)\[\]/;
 
@@ -34,7 +36,7 @@ class FigmaAPIExtract {
 
 	public static function main():Void {
 		trace("started");
-		parts = { nodeProps: null, fileFormatTypes: null, apiTypes: null, webhookTypes:null };
+		parts = { nodeProps: null, fileFormatTypes: null, apiTypes: null, webhookTypes:null, endpoints:null };
 		load();
 	}
 
@@ -44,7 +46,13 @@ class FigmaAPIExtract {
 		if (jsPath.match(html.responseData)) {
 			var js:Http = new Http('${url}${jsPath.first()}');
 			js.request();
+
+			File.saveContent('figma.js', js.responseData);
+			
 			var data:String = nl.replace(js.responseData, '');
+
+			parts.endpoints = getEndpoints(data);
+			
 			for (f in Reflect.fields(parts)) Reflect.setField(parts, f, get(data, data.indexOf('$f=') + f.length + 1));
 			generate();
 		}
@@ -82,6 +90,14 @@ class FigmaAPIExtract {
 		for (e in apiEnums) api.enums.push(e);
 
 		File.saveContent('$src/FigmaAPI.hx', new Template(File.getContent('$src/FigmaAPI.hxt')).execute(api));
+	}
+
+	private static function getEndpoints(data:String):Void {
+		if (endpoints.match(data)) {
+			var index:Int = endpoints.index();
+			var sub:Int = index.getLast(data);
+			
+		}
 	}
 
 	private static function getType(type:String, div:String = null, name:String = null):String {
@@ -148,15 +164,7 @@ class FigmaAPIExtract {
 				case ':': switch (curr) {
 					case '[', '{', '"':
 					default: {
-						var sub:Int = index;
-						var subOpen:Int = 0;
-						while (sub < data.length) {
-							switch (data.charAt(sub)) {
-								case '(': subOpen++;
-								case ')': if (--subOpen == 0) break;
-							}
-							sub++;
-						}
+						var sub:Int = index.getLast(data);
 						var subPart:String = data.substring(index, sub + 1);
 						subPart = cln.replace(subPart, '=');
 						subPart = dqt.replace(subPart, '\\"');
@@ -169,6 +177,22 @@ class FigmaAPIExtract {
 			index++;
 		}
 		return data;
+	}
+
+	private static function getLast(sub:Int, data:String, l:String = '(', r:String = ')'):Int {
+		var subOpen:Int = 0;
+		while (sub < data.length) {
+			switch (data.charAt(sub)) {
+				case l: subOpen++;
+				case r: if (--subOpen == 0) break;
+			}
+			sub++;
+		}
+		return sub;
+	}
+
+	public static inline function index(e:EReg):Int {
+		return e.matchedPos().pos + e.matchedPos().len;
 	}
 
 	public static inline function first(e:EReg):String {
@@ -193,6 +217,7 @@ private typedef Parts = {
 	var fileFormatTypes:Array<Part>;
 	var apiTypes:Array<Part>;
 	var webhookTypes:Array<Part>;
+	var endpoints:Dynamic;
 }
 
 private typedef Part = {

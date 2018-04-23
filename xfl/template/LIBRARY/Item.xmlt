@@ -1,0 +1,38 @@
+<DOMSymbolItem xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://ns.adobe.com/xfl/2008/" name="::name::" itemID="::itemID::">
+    <timeline>
+        <DOMTimeline name="::name::">
+            <layers>
+                ::foreach layers::
+                <DOMLayer name="::name::" color="#00FFFF">
+                    <frames>
+                        ::foreach frames::
+                        <DOMFrame index="::index::" keyMode="9728">
+                            <elements>
+                                ::foreach elements::
+                                ::if (type=="Shape")::
+                                <DOMShape>
+                                    <fills>
+                                        ::foreach fills::
+                                        <FillStyle index="1">
+                                            <SolidColor color="#009900"/>
+                                        </FillStyle>
+                                        ::end::
+                                    </fills>
+                                    <edges>
+                                        ::foreach edges::
+                                        <Edge fillStyle1="::fillStyle::" edges="::edges::"/>
+                                        ::end::
+                                    </edges>
+                                </DOMShape>
+                                ::end::
+                                ::end::
+                            </elements>
+                        </DOMFrame>
+                        ::end::
+                    </frames>
+                </DOMLayer>
+                ::end::
+            </layers>
+        </DOMTimeline>
+    </timeline>
+</DOMSymbolItem>
