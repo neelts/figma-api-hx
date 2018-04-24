@@ -1,0 +1,17 @@
+{
+  "name": "figma",
+  "url": "https://github.com/neelts/figma-api-hx/",
+  "license": "MIT",
+  "tags": [
+	"figma",
+	"api"
+  ],
+  "description": "Haxe Figma API",
+  "version": "0.0.1",
+  "classPath": "src/",
+  "releasenote": "Initial release, full types support, endpoints soon.",
+  "contributors": [
+	"Neil Akhmetov"
+  ],
+  "dependencies": {}
+}

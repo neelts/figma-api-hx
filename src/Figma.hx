@@ -13,17 +13,21 @@ class Figma {
 		var figmaAPI:FigmaAPI = new FigmaAPI("token".load());
 		var fileKey:String = "file".load();
 		figmaAPI.files(fileKey, function(r:Response<Document>) {
-			'xfl/${r.data.name}.json'.save(Json.stringify(r.data));
-			FigmaXFLGenerate.generate(figmaAPI, fileKey, r.data, "xfl");
-			//Sys.exit(0);
+			'${r.data.name}.json'.save(Json.stringify(r.data));
+			if (r.data != null) {
+				trace(r.data.name);
+				trace(r.data.lastModified);
+				var document:DocumentNode = r.data.document;
+				for (node in document.children) trace(node.type);
+			} else {
+				trace(r.error);
+				trace(r.error.err);
+				trace(r.error.status);
+			}
+			Sys.exit(0);
 		});
 
 		MainLoop.addThread(keep);
-		
-		//FigmaXFL.update(cast "xfl/Test.json".load(), "xfl/Test");
-		//FigmaXFLUpdate.update(cast "xfl/Test.json".load(), "xfl/Test");
-
-		//FigmaXFLGenerate.generate("xfl/Test2.json".load().parse(), "xfl");
 	}
 
 	public static inline function load(file:String):String return File.getContent(file);
