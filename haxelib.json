@@ -10,8 +10,6 @@
   "version": "0.0.1",
   "classPath": "src/",
   "releasenote": "Initial release, full types support, endpoints soon.",
-  "contributors": [
-	"Neil Akhmetov"
-  ],
+  "contributors": ["neelts"],
   "dependencies": {}
 }
