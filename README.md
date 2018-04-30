@@ -6,8 +6,9 @@
 ## Example
 ```haxe
 var figmaAPI:FigmaAPI = new FigmaAPI(FIGMA_TOKEN);
-figmaAPI.files(FILE_KEY, function(r:Response<Document>) {
+figmaAPI.files(FILE_KEY, { geometry:FilesGeometry.PATHS }, function(r:Response<Document>) {
 	trace(r.data.name); 
 	trace(r.data.lastModified); 
+	...
 });
 ```
