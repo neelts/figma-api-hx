@@ -176,6 +176,8 @@ typedef FrameNode = { > Node,
 	var transitionNodeID:String;
 	var opacity:Float;
 	var absoluteBoundingBox:Rectangle;
+	var size:Vector;
+	var relativeTransform:Array<Array<Float>>;
 	var clipsContent:Bool;
 	var layoutGrids:Array<LayoutGrid>;
 	var effects:Array<Effect>;
@@ -197,11 +199,15 @@ typedef VectorNode = { > Node,
 	var transitionNodeID:String;
 	var opacity:Float;
 	var absoluteBoundingBox:Rectangle;
+	var size:Vector;
+	var relativeTransform:Array<Array<Float>>;
 	var effects:Array<Effect>;
 	var isMask:Bool;
 	var fills:Array<Paint>;
+	var fillGeometry:Array<Path>;
 	var strokes:Array<Paint>;
 	var strokeWeight:Float;
+	var strokeGeometry:Array<Path>;
 	var strokeAlign:VectorNodeStrokeAlign;
 	
 }
@@ -251,6 +257,8 @@ typedef SliceNode = { > Node,
 
 	var exportSettings:Array<ExportSetting>;
 	var absoluteBoundingBox:Rectangle;
+	var size:Vector;
+	var relativeTransform:Array<Array<Float>>;
 	
 }
 
@@ -354,6 +362,15 @@ typedef Vector = {
 	
 }
 
+
+
+typedef Path = {
+
+	var path:String;
+	var windingRule:PathWindingRule;
+	
+}
+
 typedef FrameOffset = {
 
 	var node_id:String;
@@ -424,6 +441,13 @@ typedef Component = {
 	var Top = "TOP";
 	var Center = "CENTER";
 	var Bottom = "BOTTOM";
+	
+}
+
+@:enum abstract PathWindingRule(String) {
+
+	var Evenodd = "EVENODD";
+	var Nonzero = "NONZERO";
 	
 }
 

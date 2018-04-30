@@ -7,9 +7,9 @@
 	"api"
   ],
   "description": "Haxe Figma API",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "classPath": "src/",
-  "releasenote": "Initial release, full types support, endpoints soon.",
+  "releasenote": "Single types fix. Latest API changes fix.",
   "contributors": ["neelts"],
   "dependencies": {}
 }

@@ -2,7 +2,7 @@
 <module type="HAXE_MODULE" version="4">
   <component name="HaxeModuleSettingsStorage">
     <option name="buildConfig" value="1" />
-    <option name="hxmlPath" value="$MODULE_DIR$/compile.hxml" />
+    <option name="hxmlPath" value="$MODULE_DIR$/compile-extract.hxml" />
     <option name="outputFolder" value="$MODULE_DIR$/out" />
   </component>
   <component name="NewModuleRootManager">

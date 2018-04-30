@@ -149,11 +149,11 @@ typedef ::name:: = { > ::extend::,
 *
 **/::foreach types::
 
-typedef ::name:: = {
+::if (!isEmpty)::typedef ::name:: = {
 
 	::foreach vars::::if optional::@:optional ::end::var ::name:::::type::;
 	::end::
-}::end::
+}::end::::end::
 
 /**
 *

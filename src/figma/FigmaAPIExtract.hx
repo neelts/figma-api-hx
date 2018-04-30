@@ -1,5 +1,6 @@
 package figma;
 
+import haxe.ds.StringMap;
 import haxe.Http;
 import haxe.Json;
 import haxe.Template;
@@ -36,7 +37,7 @@ class FigmaAPIExtract {
 
 	public static function main():Void {
 		trace("started");
-		parts = { nodeProps: null, fileFormatTypes: null, apiTypes: null, webhookTypes:null, endpoints:null };
+		parts = { nodeProps: null, fileFormatTypes: null, apiTypes: null, webhookTypes:null };
 		load();
 	}
 
@@ -47,13 +48,16 @@ class FigmaAPIExtract {
 			var js:Http = new Http('${url}${jsPath.first()}');
 			js.request();
 
-			File.saveContent('figma.js', js.responseData);
+			//File.saveContent('figma.js', js.responseData);
 			
 			var data:String = nl.replace(js.responseData, '');
-
-			parts.endpoints = getEndpoints(data);
 			
-			for (f in Reflect.fields(parts)) Reflect.setField(parts, f, get(data, data.indexOf('$f=') + f.length + 1));
+			for (f in Reflect.fields(parts)) {
+				Reflect.setField(parts, f, get(data, data.indexOf('$f=') + f.length + 1));
+			}
+
+			//parts.endpoints = getEndpoints(data);
+			
 			generate();
 		}
 	}
@@ -61,8 +65,8 @@ class FigmaAPIExtract {
 	private static function generate():Void {
 
 		api = { nodes:[], types:[], enums:[] };
-		apiEnums = new Map<String, TypeDef>();
-
+		apiEnums = new StringMap<TypeDef>();
+		
 		for (node in parts.nodeProps) {
 			var type:NodeTypeDef = { name:node.name.getName(), type:node.name, id:node.name.getName(false), vars:[] };
 			for (prop in node.props) {
@@ -75,6 +79,8 @@ class FigmaAPIExtract {
 			api.nodes.push(type);
 		}
 
+		var types:StringMap<TypeDef> = new StringMap<TypeDef>();
+		
 		for (part in parts.fileFormatTypes) {
 			if (isEnum.match(part.desc)) {
 				for (prop in part.props) addEnumType(prop.div, part.name);
@@ -83,7 +89,18 @@ class FigmaAPIExtract {
 				for (prop in part.props) if (prop.name != null) type.vars.push({
 					name:prop.name, type:prop.type.getType(prop.div, type.name + prop.name.capital())
 				});
+				types.set(part.name, type);
 				api.types.push(type);
+			}
+		}
+
+		for (node in api.nodes) {
+			for (prop in node.vars) {
+				var type = types.get(prop.type);
+				if (type != null && type.vars.length == 1 && type.vars[0].name == "") {
+					prop.type = type.vars[0].type;
+					if (!type.isEmpty) type.isEmpty = true;
+				}
 			}
 		}
 
@@ -92,11 +109,12 @@ class FigmaAPIExtract {
 		File.saveContent('$src/FigmaAPI.hx', new Template(File.getContent('$src/FigmaAPI.hxt')).execute(api));
 	}
 
-	private static function getEndpoints(data:String):Void {
+	private static function getEndpoints(data:String):Dynamic {
 		if (endpoints.match(data)) {
 			var index:Int = endpoints.index();
 			var sub:Int = index.getLast(data);
 		}
+		return null;
 	}
 
 	private static function getType(type:String, div:String = null, name:String = null):String {
@@ -181,10 +199,8 @@ class FigmaAPIExtract {
 	private static function getLast(sub:Int, data:String, l:String = '(', r:String = ')'):Int {
 		var subOpen:Int = 0;
 		while (sub < data.length) {
-			switch (data.charAt(sub)) {
-				case l: subOpen++;
-				case r: if (--subOpen == 0) break;
-			}
+			if (data.charAt(sub) == l) subOpen++
+			else if (data.charAt(sub) == r && --subOpen == 0) break;
 			sub++;
 		}
 		return sub;
@@ -216,7 +232,7 @@ private typedef Parts = {
 	var fileFormatTypes:Array<Part>;
 	var apiTypes:Array<Part>;
 	var webhookTypes:Array<Part>;
-	var endpoints:Dynamic;
+	@:optional var endpoints:Dynamic;
 }
 
 private typedef Part = {
@@ -242,6 +258,7 @@ private typedef API = {
 private typedef TypeDef = {
 	var name:String;
 	var vars:Array<TypeDefVar>;
+	@:optional var isEmpty:Bool;
 	@:optional var isEnum:Bool;
 }
 
