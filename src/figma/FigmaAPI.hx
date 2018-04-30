@@ -28,8 +28,8 @@ class FigmaAPI {
 		this.token = token;
 	}
 
-	public function files(key:String, ?onComplete:Response<Document> -> Void):Void call(methodName(), key, null, onComplete);
-	public function images(key:String, params:ImagesParams, ?onComplete:Response<ImagesResponse> -> Void):Void call(methodName(), key, params, onComplete);
+	public function files(key:String, params:FilesParams, onComplete:Response<Document> -> Void):Void call(methodName(), key, params, onComplete);
+	public function images(key:String, params:ImagesParams, onComplete:Response<ImagesResponse> -> Void):Void call(methodName(), key, params, onComplete);
 
 	private function call<P, T, R:Response<T>>(method:String, key:String, params:P = null, onComplete:R -> Void = null):Void {
 		var thread:Thread = Thread.create(callAsync);
@@ -79,6 +79,20 @@ typedef Response<T> = {
 
 	@:optional var data:T;
 	@:optional var error:ResponseError;
+
+}
+
+typedef FilesParams = {
+
+	@:optional var version:String;
+	@:optional var geometry:FilesGeometry;
+
+}
+
+@:enum abstract FilesGeometry(String) {
+
+	var NONE = "";
+	var PATHS = "paths";
 
 }
 

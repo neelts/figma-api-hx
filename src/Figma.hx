@@ -12,7 +12,7 @@ class Figma {
 	public static function main():Void {
 		var figmaAPI:FigmaAPI = new FigmaAPI("token".load());
 		var fileKey:String = "file".load();
-		figmaAPI.files(fileKey, function(r:Response<Document>) {
+		figmaAPI.files(fileKey, { geometry:FilesGeometry.PATHS }, function(r:Response<Document>) {
 			'${r.data.name}.json'.save(Json.stringify(r.data));
 			if (r.data != null) {
 				trace(r.data.name);
