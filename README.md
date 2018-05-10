@@ -2,7 +2,7 @@
 ## Haxe Figma API
  - Automatically extracts [Figma API](https://www.figma.com/developers/docs) 
  - Full types and enums support.
- - Comments & images endpoints support in the next update.
+ - Comments & other endpoints support in the next update.
 ## Example
 ```haxe
 var figmaAPI:FigmaAPI = new FigmaAPI(FIGMA_TOKEN);
