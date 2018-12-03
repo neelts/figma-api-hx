@@ -7,6 +7,7 @@ import haxe.Template;
 import sys.io.File;
 
 using StringTools;
+using sys.io.File;
 using figma.FigmaAPIExtract;
 
 class FigmaAPIExtract {
@@ -22,13 +23,12 @@ class FigmaAPIExtract {
 	private static var cln:EReg = ~/:+/g;
 	private static var def:EReg = ~/"default"/g;
 	private static var props:EReg = ~/([a-zA-Z0-9]*):/g;
+	private static var propsRemove:EReg = ~/(?:\s+)([a-zA-Z0-9]+):/g;
 	private static var extend:EReg = ~/"span",\{className=l\.literal\},"([A-Z_]+)"/g;
-	private static var enums:EReg = ~/"span",\{className=l\.string\},'"([A-Z_]+)"'/g;
+	private static var enums:EReg = ~/"span",\{className=l\.string\},"([A-Z_]+)"/g;
 	private static var isEnum:EReg = ~/enum/gi;
 
 	private static var endpoints:EReg = ~/createElement\("div",\{id:"endpoints"\}/;
-
-	private static var map:EReg = ~/Map<(.+),(.+)>/;
 	private static var array:EReg = ~/(.+)\[\]/;
 
 	private static var parts:Parts;
@@ -37,7 +37,7 @@ class FigmaAPIExtract {
 
 	public static function main():Void {
 		trace("started");
-		parts = { nodeProps: null, fileFormatTypes: null, apiTypes: null, webhookTypes:null };
+		parts = { NodePropertiesTable: null, TypesTable: null, MutationsTable: null };
 		load();
 	}
 
@@ -49,15 +49,20 @@ class FigmaAPIExtract {
 			js.request();
 
 			//File.saveContent('figma.js', js.responseData);
-			
 			var data:String = nl.replace(js.responseData, '');
-			
+
+			var varsData = data.substr(data.indexOf("FilesDescription=function()"));
+			var typesData = data.substr(data.indexOf("GlobalPropertiesTable=function()"));
 			for (f in Reflect.fields(parts)) {
-				Reflect.setField(parts, f, get(data, data.indexOf('$f=') + f.length + 1));
+				var etype = new EReg('\\.$f=function\\(\\)\\{.+?(\\w)\\.map', 'g');
+				if (etype.match(typesData)) {
+					varsData = propsRemove.replace(varsData, '$1 =');
+					Reflect.setField(parts, f, get(varsData, varsData.indexOf('${etype.first()}=[') + 2, f));
+				}
 			}
 
 			//parts.endpoints = getEndpoints(data);
-			
+
 			generate();
 		}
 	}
@@ -67,7 +72,7 @@ class FigmaAPIExtract {
 		api = { nodes:[], types:[], enums:[] };
 		apiEnums = new StringMap<TypeDef>();
 		
-		for (node in parts.nodeProps) {
+		for (node in parts.NodePropertiesTable) {
 			var type:NodeTypeDef = { name:node.name.getName(), type:node.name, id:node.name.getName(false), vars:[] };
 			for (prop in node.props) {
 				if (type.extend == null && prop.div != null && prop.name == null) type.extend = prop.div.getExtends();
@@ -81,7 +86,7 @@ class FigmaAPIExtract {
 
 		var types:StringMap<TypeDef> = new StringMap<TypeDef>();
 		
-		for (part in parts.fileFormatTypes) {
+		for (part in parts.TypesTable) {
 			if (isEnum.match(part.desc)) {
 				for (prop in part.props) addEnumType(prop.div, part.name);
 			} else {
@@ -118,6 +123,7 @@ class FigmaAPIExtract {
 	}
 
 	private static function getType(type:String, div:String = null, name:String = null):String {
+		var map:EReg = ~/Map<(.+),(.+)>/;
 		return switch (type) {
 			case 'Boolean': 'Bool';
 			case 'Number': 'Float';
@@ -154,7 +160,8 @@ class FigmaAPIExtract {
 		return extend.match(div) ? extend.first().getName() : null;
 	}
 
-	private static function get(data:String, from:Int):Dynamic {
+	private static function get(data:String, from:Int, n:String):Dynamic {
+
 		var index:Int = from;
 		var open:Int = 0;
 		while (from < data.length) {
@@ -165,14 +172,15 @@ class FigmaAPIExtract {
 			}
 			index++;
 		}
+
 		var r:String = props.replace(parse(data.substring(from, index + 1)), '"$1":');
 		r = def.replace(r, '"def"');
+
 		return Json.parse(r);
 	}
 
 	private static function parse(data:String):String {
 		var index:Int = 0;
-		var open:Int = 0;
 		var curr:String;
 		var prev:String = null;
 		while (index < data.length) {
@@ -228,10 +236,9 @@ class FigmaAPIExtract {
 }
 
 private typedef Parts = {
-	var nodeProps:Array<Part>;
-	var fileFormatTypes:Array<Part>;
-	var apiTypes:Array<Part>;
-	var webhookTypes:Array<Part>;
+	var NodePropertiesTable:Array<Part>;
+	var TypesTable:Array<Part>;
+	var MutationsTable:Array<Part>;
 	@:optional var endpoints:Dynamic;
 }
 

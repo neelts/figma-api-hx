@@ -153,7 +153,6 @@ typedef Node = {
 	var Group = "GROUP";
 	var Vector = "VECTOR";
 	var Boolean = "BOOLEAN";
-	var Star = "STAR";
 	var Line = "LINE";
 	var Ellipse = "ELLIPSE";
 	var RegularPolygon = "REGULAR_POLYGON";
@@ -174,7 +173,9 @@ typedef DocumentNode = { > Node,
 typedef CanvasNode = { > Node,
 
 	var children:Array<Node>;
+	var background:Array<Paint>;
 	var backgroundColor:Color;
+	var prototypeStartNodeID:String;
 	var exportSettings:Array<ExportSetting>;
 	
 }
@@ -188,10 +189,12 @@ typedef FrameNode = { > Node,
 	var preserveRatio:Bool;
 	var constraints:LayoutConstraint;
 	var transitionNodeID:String;
+	var transitionDuration:Float;
+	var transitionEasing:EasingType;
 	var opacity:Float;
 	var absoluteBoundingBox:Rectangle;
 	var size:Vector;
-	var relativeTransform:Array<Array<Float>>;
+	var relativeTransform:Transform;
 	var clipsContent:Bool;
 	var layoutGrids:Array<LayoutGrid>;
 	var effects:Array<Effect>;
@@ -211,11 +214,13 @@ typedef VectorNode = { > Node,
 	var preserveRatio:Bool;
 	var constraints:LayoutConstraint;
 	var transitionNodeID:String;
+	var transitionDuration:Float;
+	var transitionEasing:EasingType;
 	var opacity:Float;
 	var absoluteBoundingBox:Rectangle;
-	var size:Vector;
-	var relativeTransform:Array<Array<Float>>;
 	var effects:Array<Effect>;
+	var size:Vector;
+	var relativeTransform:Transform;
 	var isMask:Bool;
 	var fills:Array<Paint>;
 	var fillGeometry:Array<Path>;
@@ -223,17 +228,14 @@ typedef VectorNode = { > Node,
 	var strokeWeight:Float;
 	var strokeGeometry:Array<Path>;
 	var strokeAlign:VectorNodeStrokeAlign;
+	var styles:Map<StyleType,  String>;
 	
 }
 
 typedef BooleanNode = { > VectorNode,
 
 	var children:Array<Node>;
-	
-}
-
-typedef StarNode = { > VectorNode,
-
+	var booleanOperation:String;
 	
 }
 
@@ -255,6 +257,7 @@ typedef RegularPolygonNode = { > VectorNode,
 typedef RectangleNode = { > VectorNode,
 
 	var cornerRadius:Float;
+	var rectangleCornerRadii:Array<Float>;
 	
 }
 
@@ -272,7 +275,7 @@ typedef SliceNode = { > Node,
 	var exportSettings:Array<ExportSetting>;
 	var absoluteBoundingBox:Rectangle;
 	var size:Vector;
-	var relativeTransform:Array<Array<Float>>;
+	var relativeTransform:Transform;
 	
 }
 
@@ -366,6 +369,9 @@ typedef Paint = {
 	var gradientHandlePositions:Array<Vector>;
 	var gradientStops:Array<ColorStop>;
 	var scaleMode:PaintScaleMode;
+	var imageTransform:PaintImageTransform;
+	var scalingFactor:Float;
+	var imageRef:String;
 	
 }
 
@@ -373,15 +379,6 @@ typedef Vector = {
 
 	var x:Float;
 	var y:Float;
-	
-}
-
-
-
-typedef Path = {
-
-	var path:String;
-	var windingRule:PathWindingRule;
 	
 }
 
@@ -422,6 +419,20 @@ typedef Component = {
 	
 }
 
+typedef Style = {
+
+	var name:String;
+	var style_type:StyleType;
+	
+}
+
+typedef Transform = Array<Array<Float>>;
+
+typedef Path = {
+	var path:String;
+	var windingRule:PathWindingRule;
+}
+
 /**
 *
 *	Enums
@@ -438,30 +449,11 @@ typedef Component = {
 	
 }
 
-@:enum abstract PaintType(String) {
-
-	var Solid = "SOLID";
-	var GradientLinear = "GRADIENT_LINEAR";
-	var GradientRadial = "GRADIENT_RADIAL";
-	var GradientAngular = "GRADIENT_ANGULAR";
-	var GradientDiamond = "GRADIENT_DIAMOND";
-	var Image = "IMAGE";
-	var Emoji = "EMOJI";
-	
-}
-
 @:enum abstract TypeStyleTextAlignVertical(String) {
 
 	var Top = "TOP";
 	var Center = "CENTER";
 	var Bottom = "BOTTOM";
-	
-}
-
-@:enum abstract PathWindingRule(String) {
-
-	var Evenodd = "EVENODD";
-	var Nonzero = "NONZERO";
 	
 }
 
@@ -475,19 +467,17 @@ typedef Component = {
 	
 }
 
+@:enum abstract PaintImageTransform(String) {
+
+	var Stretch = "STRETCH";
+	
+}
+
 @:enum abstract VectorNodeStrokeAlign(String) {
 
 	var Inside = "INSIDE";
 	var Outside = "OUTSIDE";
 	var Center = "CENTER";
-	
-}
-
-@:enum abstract ExportSettingFormat(String) {
-
-	var Jpg = "JPG";
-	var Png = "PNG";
-	var Svg = "SVG";
 	
 }
 
@@ -515,20 +505,19 @@ typedef Component = {
 	
 }
 
-@:enum abstract EffectType(String) {
-
-	var InnerShadow = "INNER_SHADOW";
-	var DropShadow = "DROP_SHADOW";
-	var LayerBlur = "LAYER_BLUR";
-	var BackgroundBlur = "BACKGROUND_BLUR";
-	
-}
-
 @:enum abstract ConstraintType(String) {
 
 	var Scale = "SCALE";
 	var Width = "WIDTH";
 	var Height = "HEIGHT";
+	
+}
+
+@:enum abstract EasingType(String) {
+
+	var EaseIn = "EASE_IN";
+	var EaseOut = "EASE_OUT";
+	var EaseInAndOut = "EASE_IN_AND_OUT";
 	
 }
 
@@ -564,4 +553,48 @@ typedef Component = {
 	var Tile = "TILE";
 	var Stretch = "STRETCH";
 	
+}
+
+@:enum abstract PaintType(String) {
+
+	var Solid = "SOLID";
+	var GradientLinear = "GRADIENT_LINEAR";
+	var GradientRadial = "GRADIENT_RADIAL";
+	var GradientAngular = "GRADIENT_ANGULAR";
+	var GradientDiamond = "GRADIENT_DIAMOND";
+	var Image = "IMAGE";
+	var Emoji = "EMOJI";
+	
+}
+
+@:enum abstract ExportSettingFormat(String) {
+
+	var Jpg = "JPG";
+	var Png = "PNG";
+	var Svg = "SVG";
+	
+}
+
+@:enum abstract EffectType(String) {
+
+	var InnerShadow = "INNER_SHADOW";
+	var DropShadow = "DROP_SHADOW";
+	var LayerBlur = "LAYER_BLUR";
+	var BackgroundBlur = "BACKGROUND_BLUR";
+	
+}
+
+@:enum abstract StyleType(String) {
+
+	var Grid = "GRID";
+	var Fill = "FILL";
+	var Effect = "EFFECT";
+
+}
+
+@:enum abstract PathWindingRule(String) {
+
+	var Evenodd = "EVENODD";
+	var Nonzero = "NONZERO";
+
 }

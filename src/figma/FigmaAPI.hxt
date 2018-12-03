@@ -169,6 +169,13 @@ typedef ::name:: = { > ::extend::,
 	::end::
 }::end::::end::
 
+typedef Transform = Array<Array<Float>>;
+
+typedef Path = {
+	var path:String;
+	var windingRule:PathWindingRule;
+}
+
 /**
 *
 *	Enums
@@ -180,3 +187,18 @@ typedef ::name:: = { > ::extend::,
 	::foreach vars::var ::name:: = ::value::;
 	::end::
 }::end::
+
+@:enum abstract StyleType(String) {
+
+	var Grid = "GRID";
+	var Fill = "FILL";
+	var Effect = "EFFECT";
+
+}
+
+@:enum abstract PathWindingRule(String) {
+
+	var Evenodd = "EVENODD";
+	var Nonzero = "NONZERO";
+
+}
